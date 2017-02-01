@@ -4,41 +4,61 @@
 #2. When the user clicks on save button, the contents of the file is encrypted with the master password and then saved at path.
 
 import sys
-
+from cryptotest import encrypt, decrypt
 import tkinter as tk
 from tkinter import messagebox
 import tkinter.scrolledtext as tkst
 import os.path
 from tkinter import filedialog
+import base64
+
+
+conf = "dropass.config"
+
+
+
+
+
+
+
+
+
 
 def createnewconfig():
     global filepath
-    global password
-    filepath = input("Enter the full path+filename of your new password file (will be created if not already exists): ")
-    password = input("Enter your master password: ")
+    filepath = input("Enter the full path+filename of your password file (will be created if not already exists): ")
+    #password = input("Enter your master password: ")# Yeah, don't do this.
+    with open(conf, "w") as f:
+        f.write(filepath)  # encrypt some lines using the password
 
-#1. Check if config exists. If not then create new config.
-try:
-    import dropassconfig
-    filepath = dropassconfig.config['filepath']
-    password = dropassconfig.config['password']
-except:
-    print("Could not find a valid config file. Creating new config:")
-    createnewconfig()
+#1. Check if config exists. If not then create new config
+if os.path.isfile(conf):
+    with open(conf, "r") as f:
+        filepath = f.read()
+    if os.path.isfile(filepath):
+        print("Settings successfully imported from config file")
+    else:
+        print("Config file not valid. Creating new config.")
+        createnewconfig()
 else:
-    print("Settings successfully imported from config file")
+    print("Config file not found. Creating new config.")
+    createnewconfig()
 
 #2. If file exists then try to decrypt it, otherwise encrypt some string using the user's master password
 
-if os.path.isfile(filepath):
-    contents = decrypt(filepath) #throws exception if this fails
+#    password = dropassconfig.config['password'] #LOL. Don't do this.
+if not os.path.isfile(filepath):
+    print("File not found. Creating new file.")
+    password = input("Enter your new master password: ")
+    with open(filepath, "wb") as f:
+        f.write(encrypt("Enter your passwords in this file 23123",password))#encrypt some lines using the password
 else:
-    f = open(filepath, "wb") #encrypt some lines using the password
-    for i in range(10):
-        f.write("This is line %d\r\n" % (i + 1))
-    f.close()
-    contents = decrypt(filepath)
-
+    print("Found existing file.")
+    password = input("Enter the master password for the file: ")
+with open(filepath,"rb") as f:
+    s = f.read()
+contents = decrypt(s,password) #throws exception if this fails
+print(contents)
 
 
 
