@@ -87,7 +87,7 @@ with open(filepath,"rb") as f:
 contents = decrypt(s,password) #throws exception if this fails
 
 
-root=tk.Tk("Passwords Editor - DroPass")
+root=tk.Tk()
 frame = tk.Frame(root, bg=teal)
 frame.pack(fill='both', expand='yes')
 text=tkst.ScrolledText(
