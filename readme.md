@@ -13,3 +13,5 @@
 ## Keyboard shortcuts:
 ### - Ctrl-s to save file (file will be automatically encrypted with your master password when saved - plaintext will be deleted - gone -  once you close the editor)
 ### - Ctrl-q to close editor 
+
+# Please be aware that the undo function is currently very buggy so don't count on being able to undo any changes you make to the file. 
