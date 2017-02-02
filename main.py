@@ -6,11 +6,10 @@
 import sys
 from cryptotest import encrypt, decrypt
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import * 
 import tkinter.scrolledtext as tkst
 import os.path
-import getpass
-from tkinter import filedialog
+import getpass 
 import base64
 
 conf = "dropass.config"
@@ -57,6 +56,17 @@ def ismodified(event):
         frame.configure(bg=brown)
         dirty = True
         text.edit_modified(0)  # IMPORTANT - or <<Modified>> will not be called later.
+
+# Select all the text in textbox
+def select_all(event):
+    text.tag_add(SEL, "1.0", END)
+    return 'break'
+# Select current line in textbox
+def select_line(event): 
+    current_line = text.index(INSERT)
+    text.tag_add(SEL, "insert linestart", "insert lineend+1c")
+    return 'break'
+    #after(interval, self._highlight_current_line)
 
 #1. Check if config exists. If not then create new config
 if os.path.isfile(conf):
@@ -112,6 +122,9 @@ frame.configure(bg=teal)
 
 root.bind_all("<Control-q>", checkUnsavedChanges)
 root.bind_all("<Control-s>", saveas)
+text.bind("<Control-a>", select_all)
+text.bind("<Control-l>", select_line)
+
 
 root.protocol('WM_DELETE_WINDOW', checkUnsavedChanges)  # root is your root window
 
