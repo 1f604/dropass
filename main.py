@@ -9,9 +9,9 @@ import tkinter as tk
 from tkinter import messagebox
 import tkinter.scrolledtext as tkst
 import os.path
+import getpass
 from tkinter import filedialog
 import base64
-
 
 conf = "dropass.config"
 teal='#008080'
@@ -81,7 +81,7 @@ if not os.path.isfile(filepath):
         f.write(encrypt("Enter your passwords in this file.",password))#encrypt some lines using the password
 else:
     print("Found existing file.")
-    password = input("Enter the master password for the file: ")
+    password = getpass.getpass("Enter the master password for the file: ")
 with open(filepath,"rb") as f:
     s = f.read()
 contents = decrypt(s,password) #throws exception if this fails
