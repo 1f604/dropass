@@ -6,6 +6,7 @@
 import sys
 from cryptotest import encrypt, decrypt
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import * 
 import tkinter.scrolledtext as tkst
 import os.path
@@ -120,7 +121,7 @@ text.insert('insert', contents)
 dirty = False
 frame.configure(bg=teal)
 
-root.bind_all("<Control-q>", checkUnsavedChanges)
+root.bind_all("<Control-w>", checkUnsavedChanges)
 root.bind_all("<Control-s>", saveas)
 text.bind("<Control-a>", select_all)
 text.bind("<Control-l>", select_line)
