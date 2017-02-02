@@ -49,6 +49,12 @@ def checkUnsavedChanges(event=None):
     else:
         root.destroy()
 
+def ismodified(event):
+        global dirty
+        frame.configure(bg='brown')
+        dirty = True
+        text.edit_modified(0)  # IMPORTANT - or <<Modified>> will not be called later.
+
 #1. Check if config exists. If not then create new config
 if os.path.isfile(conf):
     with open(conf, "r") as f:
@@ -77,6 +83,7 @@ with open(filepath,"rb") as f:
     s = f.read()
 contents = decrypt(s,password) #throws exception if this fails
 
+
 root=tk.Tk("Passwords Editor - DroPass")
 frame = tk.Frame(root, bg='teal')
 frame.pack(fill='both', expand='yes')
@@ -89,12 +96,7 @@ text=tkst.ScrolledText(
     undo=True
 )
 text.grid()
-def callback(event):
-    global dirty
-    frame.configure(bg='brown')
-    dirty = True
-    text.edit_modified(0) #IMPORTANT - or <<Modified>> will not be called later.
-text.bind('<<Modified>>', callback)
+text.bind('<<Modified>>', ismodified)
 button=tk.Button(root, text="Save", command=saveas,   padx=8, pady=8)
 button.pack()
 # the padx/pady space will form a frame
