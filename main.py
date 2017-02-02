@@ -14,6 +14,9 @@ import base64
 
 
 conf = "dropass.config"
+teal='#008080'
+brown='#800000'
+
 
 def createnewconfig():
     global filepath
@@ -29,7 +32,7 @@ def saveas(event=None):
     with open(filepath, "wb") as f:
         f.write(encrypt(plaintext, password))  # encrypt some lines using the password
     dirty = False
-    frame.configure(bg='teal')
+    frame.configure(bg=teal)
 
 
 def checkUnsavedChanges(event=None):
@@ -51,7 +54,7 @@ def checkUnsavedChanges(event=None):
 
 def ismodified(event):
         global dirty
-        frame.configure(bg='brown')
+        frame.configure(bg=brown)
         dirty = True
         text.edit_modified(0)  # IMPORTANT - or <<Modified>> will not be called later.
 
@@ -85,7 +88,7 @@ contents = decrypt(s,password) #throws exception if this fails
 
 
 root=tk.Tk("Passwords Editor - DroPass")
-frame = tk.Frame(root, bg='teal')
+frame = tk.Frame(root, bg=teal)
 frame.pack(fill='both', expand='yes')
 text=tkst.ScrolledText(
     master = frame,
@@ -104,7 +107,7 @@ text.pack(fill='both', expand=True, padx=8, pady=8)
 
 text.insert('insert', contents)
 dirty = False
-frame.configure(bg='teal')
+frame.configure(bg=teal)
 
 root.bind_all("<Control-q>", checkUnsavedChanges)
 root.bind_all("<Control-s>", saveas)
