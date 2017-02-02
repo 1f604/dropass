@@ -11,7 +11,7 @@
 4. You can then edit your file. Be sure to save before closing. 
 
 ## Keyboard shortcuts:
-### - Ctrl-s to save file (file will be automatically encrypted with your master password when saved - plaintext will be deleted - gone -  once you close the editor)
+### - Ctrl-s to save file (file will be automatically encrypted with your master password when saved - plaintext will be deleted - gone -  once you close the editor). Cool thing to notice is that every time you save, a new IV will be randomly generated so the ciphertext will be completely different to before! Pretty cool imo. 
 ### - Ctrl-q to close editor 
 
 # Please be aware that the undo function is currently very buggy so don't count on being able to undo any changes you make to the file. 
