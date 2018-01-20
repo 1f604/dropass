@@ -14,6 +14,7 @@ import os
 conf = "dropass.config"
 teal='#008080'
 brown='#800000'
+grey='#808080'
 filepath = ""
 curSavedFileContents = ""
 
@@ -66,6 +67,20 @@ def ismodified(event):
         frame.configure(bg=teal)
         dirty = False
     text.edit_modified(0)  # IMPORTANT - or <<Modified>> will not be called later.
+
+
+
+def on_focus_out(event):
+    if event.widget == root:
+        frame.configure(bg=grey)
+
+def on_focus_in(event):
+    if event.widget == root:
+        if dirty:
+            frame.configure(bg=brown)            
+        else:
+            frame.configure(bg=teal)
+
 
 # Select all the text in textbox
 def select_all(event):
@@ -138,6 +153,8 @@ if __name__ == "__main__":
     )
     text.grid()
     text.bind('<<Modified>>', ismodified)
+    root.bind("<FocusIn>", on_focus_in)
+    root.bind("<FocusOut>", on_focus_out)
     button=tk.Button(root, text="Save", command=saveas,   padx=8, pady=8)
     button.pack()
     # the padx/pady space will form a frame
@@ -151,7 +168,7 @@ if __name__ == "__main__":
     root.bind_all("<Control-s>", saveas)
     text.bind("<Control-a>", select_all)
     text.bind("<Control-l>", select_line)
-
+    
 
     root.protocol('WM_DELETE_WINDOW', checkUnsavedChanges)  # root is your root window
 
