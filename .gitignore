@@ -1,6 +1,9 @@
 .idea/
 dropass.config
+/data
+/config
 
+*.pyc
 ## File-based project format:
 *.iws
 

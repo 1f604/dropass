@@ -21,7 +21,6 @@ brown='#800000'
 def createnewconfig():
     global filepath
     filepath = input("Enter the full path+filename of your password file (will be created if not already exists): ")
-    #password = input("Enter your master password: ")# Yeah, don't do this.
     with open(conf, "w") as f:
         f.write(filepath)  # encrypt some lines using the password
 
@@ -69,68 +68,71 @@ def select_line(event):
     return 'break'
     #after(interval, self._highlight_current_line)
 
-#1. Check if config exists. If not then create new config
-if os.path.isfile(conf):
-    with open(conf, "r") as f:
-        filepath = f.read()
-    if os.path.isfile(filepath):
-        print("Settings successfully imported from config file")
+
+
+if __name__ == "__main__":
+    #1. Check if config exists. If not then create new config
+    if os.path.isfile(conf):
+        with open(conf, "r") as f:
+            filepath = f.read()
+        if os.path.isfile(filepath):
+            print("Settings successfully imported from config file")
+        else:
+            print("Config file not valid. Creating new config.")
+            createnewconfig()
     else:
-        print("Config file not valid. Creating new config.")
+        print("Config file not found. Creating new config.")
         createnewconfig()
-else:
-    print("Config file not found. Creating new config.")
-    createnewconfig()
 
-#2. If file exists then try to decrypt it, otherwise encrypt some string using the user's master password
+    #2. If file exists then try to decrypt it, otherwise encrypt some string using the user's master password
 
-#    password = dropassconfig.config['password'] #LOL. Don't do this.
-if not os.path.isfile(filepath):
-    print("File not found. Creating new file.")
-    password1 = getpass.getpass("Enter your new master password: ")
-    password2 = getpass.getpass("Enter your new master password again: ")
-    if (password1 != password2):
-        print("Passwords do not match, file not created, try again.") #don't create the file if the passwords don't match
-        exit(1)
-    with open(filepath, "wb") as f:
-        f.write(encrypt("Enter your passwords in this file.",password1))#encrypt some lines using the password
-else:
-    print("Found existing file.")
-    password = getpass.getpass("Enter the master password for the file: ")
-with open(filepath,"rb") as f:
-    s = f.read()
-contents = decrypt(s,password) #throws exception if this fails
+    if not os.path.isfile(filepath):
+        print("File not found. Creating new file.")
+        password1 = getpass.getpass("Enter your new master password: ")
+        password2 = getpass.getpass("Enter your new master password again: ")
+        if (password1 != password2):
+            print("Passwords do not match, file not created, try again.") #don't create the file if the passwords don't match
+            exit(1)
+        with open(filepath, "wb") as f:
+            f.write(encrypt("Enter your passwords in this file.",password1))#encrypt some lines using the password
+    else:
+        print("Found existing file.")
+        password = getpass.getpass("Enter the master password for the file: ")
+    with open(filepath,"rb") as f:
+        s = f.read()
+    contents = decrypt(s,password) #throws exception if this fails
 
+    #3. Main window setup
+    root=tk.Tk()
+    root.wm_title("DroPass")
+    frame = tk.Frame(root, bg=teal)
+    frame.pack(fill='both', expand='yes')
+    text=tkst.ScrolledText(
+        master = frame,
+        wrap   = 'word',  # wrap text at full words only
+        width  = 80,      # characters
+        height = 30,      # text lines
+        bg='beige',        # background color of edit area
+        undo=True
+    )
+    text.grid()
+    text.bind('<<Modified>>', ismodified)
+    button=tk.Button(root, text="Save", command=saveas,   padx=8, pady=8)
+    button.pack()
+    # the padx/pady space will form a frame
+    text.pack(fill='both', expand=True, padx=8, pady=8)
 
-root=tk.Tk()
-root.wm_title("DroPass")
-frame = tk.Frame(root, bg=teal)
-frame.pack(fill='both', expand='yes')
-text=tkst.ScrolledText(
-    master = frame,
-    wrap   = 'word',  # wrap text at full words only
-    width  = 80,      # characters
-    height = 30,      # text lines
-    bg='beige',        # background color of edit area
-    undo=True
-)
-text.grid()
-text.bind('<<Modified>>', ismodified)
-button=tk.Button(root, text="Save", command=saveas,   padx=8, pady=8)
-button.pack()
-# the padx/pady space will form a frame
-text.pack(fill='both', expand=True, padx=8, pady=8)
+    text.insert('insert', contents)
+    dirty = False
+    frame.configure(bg=teal)
 
-text.insert('insert', contents)
-dirty = False
-frame.configure(bg=teal)
-
-root.bind_all("<Control-w>", checkUnsavedChanges)
-root.bind_all("<Control-s>", saveas)
-text.bind("<Control-a>", select_all)
-text.bind("<Control-l>", select_line)
+    root.bind_all("<Control-w>", checkUnsavedChanges)
+    root.bind_all("<Control-s>", saveas)
+    text.bind("<Control-a>", select_all)
+    text.bind("<Control-l>", select_line)
 
 
-root.protocol('WM_DELETE_WINDOW', checkUnsavedChanges)  # root is your root window
+    root.protocol('WM_DELETE_WINDOW', checkUnsavedChanges)  # root is your root window
 
-root.mainloop()
+    #4. main loop
+    root.mainloop()
