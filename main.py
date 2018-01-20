@@ -87,9 +87,13 @@ else:
 #    password = dropassconfig.config['password'] #LOL. Don't do this.
 if not os.path.isfile(filepath):
     print("File not found. Creating new file.")
-    password = input("Enter your new master password: ")
+    password1 = getpass.getpass("Enter your new master password: ")
+    password2 = getpass.getpass("Enter your new master password again: ")
+    if (password1 != password2):
+        print("Passwords do not match, file not created, try again.") #don't create the file if the passwords don't match
+        exit(1)
     with open(filepath, "wb") as f:
-        f.write(encrypt("Enter your passwords in this file.",password))#encrypt some lines using the password
+        f.write(encrypt("Enter your passwords in this file.",password1))#encrypt some lines using the password
 else:
     print("Found existing file.")
     password = getpass.getpass("Enter the master password for the file: ")

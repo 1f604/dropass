@@ -4,6 +4,7 @@
 
 ## Dependencies:
 - Python 3+
+- tkinter (you may have to install this. On fedora you can use `sudo dnf install python3-tkinter`)
 - Cryptography (python module, you can install it via pip)
 
 ## How to use: Just run main.py from the command line (e.g python3 main.py)
