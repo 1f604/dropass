@@ -18,6 +18,36 @@ grey='#808080'
 filepath = ""
 curSavedFileContents = ""
 
+# This is the list of all default command in the "Text" tag that modify the text
+commandsToRemove = (
+"<Control-Key-h>",
+"<Meta-Key-Delete>",
+"<Meta-Key-BackSpace>",
+"<Meta-Key-d>",
+"<Meta-Key-b>",
+"<<Redo>>",
+"<<Undo>>",
+"<Control-Key-t>",
+"<Control-Key-o>",
+"<Control-Key-k>",
+"<Control-Key-d>",
+"<Key-Insert>",
+"<<PasteSelection>>",
+"<<Clear>>",
+"<<Paste>>",
+"<<Cut>>",
+"<Key-BackSpace>",
+"<Key-Delete>",
+"<Key-Return>",
+"<Control-Key-i>",
+"<Key-Tab>",
+"<Shift-Key-Tab>"
+)
+
+allowed_keys = set({'Up', 'Down', 'Left', 'Right', '<Ctrl-C>'})
+
+
+
 def createnewconfig():
     global filepath
     filepath = input("Enter the full path+filename of your password file (will be created if not already exists, leave empty to create default file in data dir): ")
@@ -68,28 +98,27 @@ def ismodified(event):
         dirty = False
     text.edit_modified(0)  # IMPORTANT - or <<Modified>> will not be called later.
 
-
-
-def on_focus_out(event):
-    if event.widget == root:
-        frame.configure(bg=grey)
-
-def on_focus_in(event):
-    if event.widget == root:
-        if dirty:
-            frame.configure(bg=brown)            
-        else:
-            frame.configure(bg=teal)
-
+#def on_focus_out(event):
+#    if event.widget == root:
+#        frame.configure(bg=grey)
+#
+#def on_focus_in(event):
+#    if event.widget == root:
+#        if dirty:
+#            frame.configure(bg=brown)            
+#        else:
+#            frame.configure(bg=teal)
 
 # Select all the text in textbox
 def select_all(event):
-    text.tag_add(tk.SEL, "1.0", tk.END)
+    wid = event.widget
+    wid.tag_add(tk.SEL, "1.0", tk.END)
     return 'break'
 # Select current line in textbox
 def select_line(event): 
-    tk.current_line = text.index(tk.INSERT)
-    text.tag_add(tk.SEL, "insert linestart", "insert lineend+1c")
+    wid = event.widget
+    tk.current_line = wid.index(tk.INSERT)
+    wid.tag_add(tk.SEL, "insert linestart", "insert lineend+1c")
     return 'break'
     #after(interval, self._highlight_current_line)
 
@@ -109,6 +138,27 @@ def createnewfile(password):
     with open(filepath, "wb") as f:
         f.write(encrypt("Enter your passwords in this file.",password)) #encrypt some lines using the password
 
+def do_nothing(event):
+    return "break"
+    
+def move_cursor(event):
+    if event.keysym in allowed_keys:
+        return
+    else:
+        return "break"
+
+def copy(widget, event):
+    widget.clipboard_clear()
+    txt = widget.get("sel.first", "sel.last")
+    widget.clipboard_append(txt)
+
+def custom_paste(event):
+    try:
+        event.widget.delete("sel.first", "sel.last")
+    except:
+        pass
+    event.widget.insert("insert", event.widget.clipboard_get())
+    return "break"
 
 if __name__ == "__main__":
     #1. Check if config exists. If not then create new config
@@ -151,24 +201,46 @@ if __name__ == "__main__":
         bg='beige',        # background color of edit area
         undo=True
     )
-    text.grid()
+    text.grid(row=0, column=0)
+    newtext=tkst.ScrolledText(
+        master = frame,
+        wrap   = 'word',  # wrap text at full words only
+        width  = 80,      # characters
+        height = 5,      # text lines
+        bg='beige',        # background color of edit area
+        undo=True
+    )
+    newtext.grid(row=1, column=0)
     text.bind('<<Modified>>', ismodified)
-    root.bind("<FocusIn>", on_focus_in)
-    root.bind("<FocusOut>", on_focus_out)
+#    text.bind("<FocusIn>", on_focus_in)
+#    text.bind("<FocusOut>", on_focus_out)
     button=tk.Button(root, text="Save", command=saveas,   padx=8, pady=8)
     button.pack()
     # the padx/pady space will form a frame
-    text.pack(fill='both', expand=True, padx=8, pady=8)
+    #text.pack(fill='both', expand=True, padx=8, pady=8)
+#    text.grid(padx=8, pady=(8,0))
+#    newtext.grid(padx=8, pady=8)
+    
+    for key in commandsToRemove:
+        text.bind(key, do_nothing)
+    text.bind("<Key>", move_cursor)
+        
 
     text.insert('insert', contents)
+    #text.configure(state="disabled") #makes text read-only
+    text.bind("<1>", lambda event: text.focus_set()) #allow text to be copyable
     dirty = False
     frame.configure(bg=teal)
 
     root.bind_all("<Control-w>", checkUnsavedChanges)
     root.bind_all("<Control-s>", saveas)
     text.bind("<Control-a>", select_all)
-    text.bind("<Control-l>", select_line)
-    
+    text.bind("<Control-d>", select_line)
+    text.bind("<Control-c>", copy)
+    newtext.bind("<Control-a>", select_all)
+    newtext.bind("<Control-d>", select_line)
+    newtext.bind("<Control-c>", copy) 
+    newtext.bind("<<Paste>>", custom_paste)
 
     root.protocol('WM_DELETE_WINDOW', checkUnsavedChanges)  # root is your root window
 
