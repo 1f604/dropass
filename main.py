@@ -2,8 +2,8 @@
 #1. Checks for config file. If config file not exist or not in right format, create new config file by asking for path of password file and the master password. Goto 2
 #If password file not exist or cannot be decrypted with password supplied, again create new config file.
 #2. When the user clicks on save button, the contents of the file is encrypted with the master password and then saved at path.
- 
-from cryptotest import encrypt, decrypt
+from cryptotest import encrypt_lines, loadfile
+from collections import OrderedDict
 import tkinter as tk
 from tkinter import messagebox 
 import tkinter.scrolledtext as tkst
@@ -16,7 +16,9 @@ teal='#008080'
 brown='#800000'
 grey='#808080'
 filepath = ""
+replifactor = ""
 curSavedFileContents = ""
+storedLines = []
 
 # This is the list of all default command in the "Text" tag that modify the text
 commandsToRemove = (
@@ -50,11 +52,19 @@ allowed_keys = set({'Up', 'Down', 'Left', 'Right', '<Ctrl-C>'})
 
 def createnewconfig():
     global filepath
+    global replifactor
+    replifactor = input("Enter the desired redundancy factor, leave empty for default (5)")
+    if replifactor == "":
+        replifactor = "5"
+    else:
+        if not replifactor.isdigit():
+            print("Redundancy factor must be an integer!")
+            exit(1)
     filepath = input("Enter the full path+filename of your password file (will be created if not already exists, leave empty to create default file in data dir): ")
     if filepath == "":
         filepath = "data/passwords.encrypted"
     with open(conf, "w") as f:
-        f.write(filepath)  # encrypt some lines using the password
+        f.write(filepath+":"+replifactor)  # encrypt some lines using the password
 
 def getTextboxContents():
     global text
@@ -121,6 +131,15 @@ def select_line(event):
     wid.tag_add(tk.SEL, "insert linestart", "insert lineend+1c")
     return 'break'
     #after(interval, self._highlight_current_line)
+    
+def getCursorCurrentLineNumber(index):
+    return tuple(map(int, index.split(".")))[0] - 1
+    
+def delete_line(event):
+    ind = text.index(tk.INSERT)
+    linenumber = getCursorCurrentLineNumber(ind)
+    print(linenumber)
+    return 'break'
 
 def askpassword():
     password1 = getpass.getpass("Enter your new master password: ")
@@ -133,24 +152,37 @@ def askpassword():
         exit(1)
     return password1
 
+def replicate_lines(lines):
+    newlines = []
+    for line in lines:
+        replines = [line] * int(replifactor)
+        newlines.append(':'.join(replines))
+    return '\n'.join(newlines)
+
+def savefile(lines, p):
+    global dirty
+    encryptedlines = encrypt_lines(lines, p)
+    contents = replicate_lines(encryptedlines)
+    with open(filepath, "w") as f:
+        f.write(contents) # write encrypted lines to file
+    dirty = False
+
 def createnewfile(password):
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, "wb") as f:
-        f.write(encrypt("Enter your passwords in this file.",password)) #encrypt some lines using the password
-
+    lines = ["hello world", "", "this is", "your password file."]
+    savefile(lines,password) #encrypt some lines using the password
+    
 def do_nothing(event):
     return "break"
+
+def do_original(event):
+    pass
     
 def move_cursor(event):
     if event.keysym in allowed_keys:
         return
     else:
         return "break"
-
-def copy(widget, event):
-    widget.clipboard_clear()
-    txt = widget.get("sel.first", "sel.last")
-    widget.clipboard_append(txt)
 
 def custom_paste(event):
     try:
@@ -160,12 +192,33 @@ def custom_paste(event):
     event.widget.insert("insert", event.widget.clipboard_get())
     return "break"
 
+def bind_select_copy(widget):
+    widget.bind("<Control-a>", select_all)
+    widget.bind("<Control-d>", select_line)
+    widget.bind("<Control-c>", do_original) 
+    
+def focus_newtext(event):
+    newtext.focus_set()
+    return("break")
+
+def focus_text(event):
+    text.focus_set()
+    return("break")
+        
+def lines2txt(lines):
+    return '\n'.join(lines)
+    
 if __name__ == "__main__":
     #1. Check if config exists. If not then create new config
     if os.path.isfile(conf):
         with open(conf, "r") as f:
-            filepath = f.read()
-        if os.path.isfile(filepath):
+            confcontents = f.read()
+            try:
+                filepath, replifactor = confcontents.split(":")
+            except:
+                print("Config file not valid. Creating new config.")
+                createnewconfig()
+        if os.path.isfile(filepath) and replifactor.isdigit():
             print("Settings successfully imported from config file")
         else:
             print("Config file not valid. Creating new config.")
@@ -183,10 +236,10 @@ if __name__ == "__main__":
     else:
         print("Found existing file.")
         password = getpass.getpass("Enter the master password for the file: ")
-    with open(filepath,"rb") as f:
-        s = f.read()
-    contents = decrypt(s,password) #throws exception if this fails
-    curSavedFileContents = contents
+    with open(filepath,"r") as f:
+        lines = f.readlines()
+    savedlines = loadfile(lines,password) #throws exception if this fails
+    contents = lines2txt(savedlines)
 
     #3. Main window setup
     root=tk.Tk()
@@ -218,11 +271,12 @@ if __name__ == "__main__":
     button.pack()
     # the padx/pady space will form a frame
     #text.pack(fill='both', expand=True, padx=8, pady=8)
-#    text.grid(padx=8, pady=(8,0))
-#    newtext.grid(padx=8, pady=8)
+    text.grid(padx=8, pady=(8,0))
+    newtext.grid(padx=8, pady=8)
     
     for key in commandsToRemove:
         text.bind(key, do_nothing)
+#    text.bind("<Delete>", do_original) #THIS LINE IS FOR TESTING ONLY!!!
     text.bind("<Key>", move_cursor)
         
 
@@ -233,15 +287,17 @@ if __name__ == "__main__":
     frame.configure(bg=teal)
 
     root.bind_all("<Control-w>", checkUnsavedChanges)
+    text.bind("<Control-w>", checkUnsavedChanges)
     root.bind_all("<Control-s>", saveas)
-    text.bind("<Control-a>", select_all)
-    text.bind("<Control-d>", select_line)
-    text.bind("<Control-c>", copy)
-    newtext.bind("<Control-a>", select_all)
-    newtext.bind("<Control-d>", select_line)
-    newtext.bind("<Control-c>", copy) 
     newtext.bind("<<Paste>>", custom_paste)
-
+    text.bind("<Control-Delete>", delete_line)
+    text.bind("<Home>", do_original)
+    text.bind("<End>", do_original)
+    text.bind("<Tab>", focus_newtext)
+    text.bind("<Control-Tab>", focus_newtext)
+    newtext.bind("<Control-Tab>", focus_text)
+    bind_select_copy(text)
+    bind_select_copy(newtext)
     root.protocol('WM_DELETE_WINDOW', checkUnsavedChanges)  # root is your root window
 
     #4. main loop

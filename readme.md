@@ -1,4 +1,8 @@
-# DroPass - Automatically Encrypting Text File Editor
+# DroPass (with checksum) 
+
+### DroPass does not provide any protection against in-memory data corruption. If you care about in-memory data integrity, then you should buy ECC RAM (along with a motherboard that supports ECC RAM). 
+
+### Decryption is best-effort. No indication is provided in case of missing lines. 
 
 >An encrypted text file on your computer is safer than a browser extension password manager. Think of how it would be compromised: someone would need to get at least user-level access to your computer, and then either read it when it's temporarily unencrypted, or wait for you to unencrypt it. That cannot be done by efficient attackers at scale. And if they've compromised your machine, you have bigger things to worry about. - [Sean Cassidy](https://www.seancassidy.me/browser-extension-password-managers-should-not-be-used.html)
 
